@@ -1,0 +1,49 @@
+#override defaults for dev
+version: "3.7"
+
+services:
+  app_server:
+    image: shopware-production:local
+    build: .
+    container_name: sw
+    depends_on:
+      - mysql
+      - elasticsearch
+    ports:
+      - "80:8000"
+      - "8005:8000"
+    environment:
+      # define yourself
+      - DATABASE_URL=mysql://root:root@mysql:3306/shopware
+      - APP_URL=http://shopware.local
+      - INSTANCE_ID=
+      - SHOPWARE_ES_ENABLED=1
+      - SHOPWARE_ES_HOSTS=elasticsearch:9200
+      - SHOPWARE_ES_INDEXING_ENABLED=1
+      - SHOPWARE_ES_INDEX_PREFIX=sw
+      - SHOPWARE_CDN_STRATEGY_DEFAULT=id
+      - MAILER_URL=smtp://localhost:25?encryption=&auth_mode=
+    volumes:
+      - "./config/jwt:/sw6/config/jwt"
+      - "./public/bundles:/sw6/public/bundles"
+      - "./public/media:/sw6/public/media"
+      - "./public/sitemap:/sw6/public/sitemap"
+      - "./public/theme:/sw6/public/theme"
+      - "./public/thumbnail:/sw6/public/thumbnail"
+      - "./var:/sw6/var"
+
+  mysql:
+    image: mariadb:10.5.8
+    container_name: shopware_db
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=shopware
+      - MYSQL_ROOT_PASSWORD=root
+
+  elasticsearch:
+    image: elastic/elasticsearch:7.8.0
+    container_name: shopware_es
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
